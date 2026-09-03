@@ -49,12 +49,19 @@ A view, `kpi_quarterly`, joins the three tables and calculates the finance ratio
 ## Key findings
 
 - **Nike leads on scale and profitability** — higher revenue (rank #1), stronger margins, and a healthier current ratio (~2.2 vs. Adidas ~1.3).
-- **Both companies' profitability dropped sharply in Q4 2025** — net margin fell to roughly 2% for both, well below their yearly averages.
+- **Both companies posted a sharp profitability drop in their respective Q4** — net margin fell to roughly 2% for each, well below their own yearly averages. Because the fiscal calendars differ, these are different calendar periods, so this is a coincidence of each company's own cycle rather than a single industry-wide event.
 - **Adidas showed a Q1 cash-flow red flag** — it reported a profit (+429) but *burned* cash from operations (-934), a negative cash-conversion signal that net income alone would hide.
 
-## Notes
+## Data sources
 
-- Adidas reports in EUR and Nike in USD; the `currency` column records each company's native reporting currency. Figures are illustrative for demonstrating the SQL and analysis.
+Quarterly figures are taken from Nike's and Adidas's own investor relations reporting for **fiscal year 2025**.
+
+## Comparability caveats
+
+Two things make a naive head-to-head comparison misleading, and both are handled deliberately here:
+
+- **The fiscal calendars do not align.** Nike's fiscal 2025 ended **May 31, 2025**; Adidas reports on the **calendar year**, ending December 31, 2025. So "Q4" is March-May 2025 for Nike and October-December 2025 for Adidas. Quarter-over-quarter trends are valid *within* each company, but a shared movement in the same quarter label is not evidence of a shared market event.
+- **The reporting currencies differ.** Adidas reports in EUR and Nike in USD; the `currency` column records each company's native currency. Figures are not currency-converted, so cross-company comparison is done with **ratios and margins** rather than absolute values.
 
 ---
 
