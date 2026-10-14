@@ -5,6 +5,8 @@
 -- ============================================================
 
 -- 1. Quarter-over-quarter revenue growth (CTE + LAG window function)
+--    Uses revenue in each company's own currency, so exchange-rate
+--    moves don't distort the growth rate.
 WITH ranked AS (
 	SELECT Name, quarter, quarter_num, revenue,
 	       LAG(revenue) OVER (PARTITION BY Name ORDER BY quarter_num) AS prev_rev
@@ -17,12 +19,13 @@ WHERE prev_rev IS NOT NULL
 ORDER BY Name, quarter_num;
 
 -- 2. Full-year revenue ranking (GROUP BY + RANK window function)
+--    Uses revenue_usd so both companies are ranked in the same currency.
 WITH fy AS (
-	SELECT Name, SUM(revenue) AS fy_revenue
+	SELECT Name, SUM(revenue_usd) AS fy_revenue_usd
 	FROM kpi_quarterly GROUP BY Name
 )
-SELECT Name, fy_revenue,
-	RANK() OVER (ORDER BY fy_revenue DESC) AS revenue_rank
+SELECT Name, fy_revenue_usd,
+	RANK() OVER (ORDER BY fy_revenue_usd DESC) AS revenue_rank
 FROM fy;
 
 -- 3. Each quarter's net margin vs the company's own average (window AVG)

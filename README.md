@@ -1,26 +1,27 @@
 # Retail Financial Performance Analytics (SQL)
 
-A SQL analytics project comparing the quarterly financial performance of **Nike** and **Adidas** across 2025. Raw financial data is stored in a normalized relational database, and analytical SQL queries turn it into finance KPIs — margins, liquidity, leverage, and cash-flow quality.
+A SQL analytics project comparing the quarterly financial performance of **Nike** and **Adidas** across fiscal year 2025. Raw financial data is stored in a normalized relational database, and analytical SQL queries turn it into finance KPIs — margins, liquidity, leverage, and cash-flow quality.
 
 This project extends an earlier Excel dashboard comparing the same companies, rebuilt as a proper SQL database with version control.
 
 ## Business question
 
-How do Nike and Adidas compare across 2025 on profitability, liquidity, leverage, and the quality of their earnings (does reported profit turn into real cash)?
+How do Nike and Adidas compare across fiscal year 2025 on profitability, liquidity, leverage, and the quality of their earnings (does reported profit turn into real cash)?
 
 ## Database design
 
-The database uses a simple **star schema** — two dimension tables and one fact table:
+The database uses a simple **star schema** — two dimension tables and one fact table, plus a small exchange-rate lookup table:
 
 | Table | Type | Description |
 |---|---|---|
 | `companies` | Dimension | Company name, ticker, currency |
 | `quarters` | Dimension | Fiscal year, quarter label |
 | `financials` | Fact | One row per company per quarter: revenue, profit, assets, liabilities, cash flow |
+| `fx_rates` | Lookup | Average USD exchange rate per currency per quarter, used to convert Adidas revenue to USD |
 
 Tables are linked with **primary keys and foreign keys**, and `financials` uses a **composite primary key** (`company_id`, `quarter_id`) so each company can have only one row per quarter.
 
-A view, `kpi_quarterly`, joins the three tables and calculates the finance ratios so the analysis queries stay clean.
+A view, `kpi_quarterly`, joins the tables, converts revenue to USD (`revenue_usd`), and calculates the finance ratios so the analysis queries stay clean.
 
 ## KPIs calculated
 
@@ -48,19 +49,21 @@ A view, `kpi_quarterly`, joins the three tables and calculates the finance ratio
 
 ## Key findings
 
-- **Nike leads on scale and profitability** — higher revenue (rank #1), stronger margins, and a healthier current ratio (~2.2 vs. Adidas ~1.3).
+- **Nike leads on scale and liquidity, while Adidas keeps more profit per sale** — Nike ranks #1 on revenue ($46.3B vs. $28.0B after converting Adidas to USD), has a higher average net margin (6.8% vs. 5.5%), and a healthier current ratio (~2.2 vs. ~1.3). Adidas has the higher gross margin every quarter (~51–52% vs. Nike's 40–45%).
 - **Each company had a sharp profitability drop in its own Q4** — net margin fell to roughly 2% for both, well below their own yearly averages. Because the fiscal years differ, these are different calendar periods, so this is each company's own cycle rather than one industry-wide event.
 - **Adidas showed a Q1 cash-flow red flag** — it reported a profit (+429) but *burned* cash from operations (-934), a negative cash-conversion signal that net income alone would hide.
 
 ## Data sources
 
-Quarterly figures are taken from Nike's and Adidas's investor relations websites for fiscal year 2025.
+Quarterly figures are taken from Nike's and Adidas's investor relations websites for fiscal year 2025. For Nike, operating income uses the EBIT figure reported in its quarterly earnings releases. Adidas uses reported operating profit.
+
+EUR-to-USD rates are quarterly averages of 2025 monthly average rates from [x-rates.com](https://www.x-rates.com/average/?from=EUR&to=USD&amount=1&year=2025).
 
 ## Things to know when reading the results
 
 - **The fiscal years don't line up.** Nike's fiscal 2025 ended May 31, 2025. Adidas reports on the calendar year, ending December 31, 2025. So "Q4" means March-May for Nike and October-December for Adidas.
 
-- **The currencies aren't converted.** Adidas reports in EUR, Nike in USD. The revenue ranking compares the two unconverted, so it reflects each company's own reporting currency. The margin and ratio findings are the ones that compare fairly across companies.
+- **Currency.** Adidas reports in EUR, Nike in USD. The view converts revenue to USD at each quarter's average exchange rate, and the revenue ranking uses that converted figure. Margins and ratios need no conversion, because both numbers in each ratio are in the same currency. Quarter-over-quarter growth uses each company's own currency, so exchange-rate moves don't distort it.
 
 ---
 

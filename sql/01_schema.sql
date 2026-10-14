@@ -7,6 +7,7 @@
 -- Drop old objects first so this script can be re-run cleanly.
 -- (Order matters: view first, then the child table, then parents.)
 DROP VIEW  IF EXISTS kpi_quarterly;
+DROP TABLE IF EXISTS fx_rates;
 DROP TABLE IF EXISTS financials;
 DROP TABLE IF EXISTS companies;
 DROP TABLE IF EXISTS quarters;
@@ -43,5 +44,15 @@ CREATE TABLE financials (
     ending_cash         REAL,
     PRIMARY KEY (company_id, quarter_id),
     FOREIGN KEY (company_id) REFERENCES companies(company_id),
+    FOREIGN KEY (quarter_id) REFERENCES quarters(quarter_id)
+);
+
+-- Lookup table: average exchange rate to USD for each currency and quarter.
+-- Used by the view to convert Adidas revenue (EUR) into USD.
+CREATE TABLE fx_rates (
+    currency    TEXT    NOT NULL,
+    quarter_id  INTEGER NOT NULL,
+    usd_rate    REAL    NOT NULL,
+    PRIMARY KEY (currency, quarter_id),
     FOREIGN KEY (quarter_id) REFERENCES quarters(quarter_id)
 );
