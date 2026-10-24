@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="retail.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="4736"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="companies" custom_title="0" dock_id="1" table="4,9:maincompanies"/><dock_state state="000000ff00000000fd00000001000000020000000000000000fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000011300ffffff000000000000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1*">DROP VIEW IF EXISTS kpi_quarterly;
+DROP TABLE IF EXISTS financials;
+DROP TABLE IF EXISTS companies;
+DROP TABLE IF EXISTS quarters;
+
+CREATE TABLE companies (
+	Name TEXT NOT NULL,
+	company_id INTEGER PRIMARY KEY,
+	currency TEXT NOT NULL,
+	ticker TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE quarters (
+	quarter_id INTEGER PRIMARY KEY,
+	fiscal_year INTEGER NOT NULL,
+	label TEXT NOT NULL,
+	quarter_num INTEGER NOT NULL
+);
+
+CREATE TABLE financials (
+	company_id INTEGER NOT NULL,
+	quarter_id INTEGER NOT NULL,
+	revenue REAL,
+	gross_profit REAL,
+	operating REAL,
+	net_income REAL,
+	current_asset REAL,
+	current_liab REAL,
+	total_asset REAL,
+	total_liab REAL,
+	operating_cash_flow REAL,
+	ending_cash REAL,
+	PRIMARY KEY (company_id, quarter_id),
+	FOREIGN KEY (company_id) REFERENCES companies(company_id),
+	FOREIGN KEY (quarter_id) REFERENCES quarters(quarter_id)
+	);
+	
+INSERT INTO companies (Name, company_id, currency, ticker) VALUES
+	('Nike Inc', 1, 'USD', 'NKE'),
+	('Adidas AG', 2, 'EUR', 'ADDYY');
+
+INSERT INTO quarters (quarter_id, fiscal_year, label, quarter_num) VALUES
+	(1, 2025, 'Q1 2025', 1),
+	(2, 2025, 'Q2 2025', 2),
+	(3, 2025, 'Q3 2025', 3),
+	(4, 2025, 'Q4 2025', 4);
+	
+INSERT INTO financials (company_id, quarter_id, revenue, gross_profit, operating, net_income, current_asset, current_liab, total_asset, total_liab, operating_cash_flow, ending_cash ) VALUES
+	(1, 1, 11589, 5257, 1209, 1051, 25040, 10628, 37867, 23923, 394, 8485),
+	(1, 2, 12354, 5389, 2384, 1163, 24980, 11246, 37959, 23922, 1049, 7979),
+	(1, 3, 11269, 4675, 788, 794, 24608, 11223, 37793, 23786, 1792, 8601),
+	(1, 4, 11097, 4469, 321, 211, 23362, 10566, 36579, 23366, 463, 7464),
+	(2, 1, 6153, 3205, 610, 429, 11521, 8942, 20091, 14004, -934, 1432),
+	(2, 2, 5952, 3077, 546, 381, 11234, 8961, 19499, 13945, 18, 768),
+	(2, 3, 6630, 3435, 736, 485, 11967, 9133, 20147, 14068, 641, 1030),
+	(2, 4, 6076, 3088, 164, 91, 11977, 9094, 20262, 14137, 1026, 1617);
+
+CREATE VIEW kpi_quarterly AS
+	SELECT c.Name, c.ticker, f.revenue, f.gross_profit,
+	f.operating, f.current_asset, f.current_liab,
+	f.total_asset, f.total_liab, f.net_income, 
+	f.operating_cash_flow, f.ending_cash,
+	q.quarter_num, q.fiscal_year, q.label AS quarter,
+	ROUND(f.gross_profit * 100.0 / f.revenue, 1) AS gross_margin,
+	ROUND(f.operating   * 100.0 / f.revenue, 1) AS operating_margin,
+	ROUND(f.net_income  * 100.0 / f.revenue, 1) AS net_margin,
+	ROUND(f.current_asset / f.current_liab, 2)  AS current_ratio,
+	ROUND(f.total_liab / f.total_asset, 2)      AS debt_to_asset,
+	ROUND(f.operating_cash_flow *100.0/ f.revenue, 2)    AS operating_cash_margin,
+	ROUND(f.ending_cash *100.0/ f.revenue, 2)      AS cash_to_rev
+	FROM financials f
+	JOIN companies c ON c.company_id = f.company_id
+	JOIN quarters q ON q.quarter_id = f.quarter_id;
+
+-- within company growth analysis	
+WITH ranked AS (
+	SELECT Name, quarter, quarter_num, revenue, LAG(revenue)
+	OVER (PARTITION BY Name ORDER BY quarter_num) AS 
+	prev_rev
+	FROM kpi_quarterly
+)
+SELECT Name, quarter, revenue, ROUND ((revenue - prev_rev) * 100.0/prev_rev, 1) AS growth
+FROM ranked
+WHERE prev_rev IS NOT NULL
+ORDER BY Name, quarter_num;
+
+-- full year revenue ranking 
+WITH fy AS (
+	SELECT Name, SUM (revenue) AS fy_revenue
+	FROM kpi_quarterly GROUP BY Name
+)
+SELECT Name, fy_revenue,
+	RANK () OVER (ORDER BY fy_revenue DESC) AS revenue_rank 
+	FROM fy;
+
+--quarter vs margin
+SELECT Name, quarter, net_margin,
+	ROUND (AVG(net_margin) OVER (PARTITION BY Name),1) AS avg_net_margin,
+	ROUND (net_margin - AVG(net_margin) OVER (PARTITION BY Name),1) AS delta 
+	FROM kpi_quarterly
+	ORDER BY Name, quarter_num;
+	
+-- cash conversion: does profit turn into cash?
+SELECT Name, quarter, net_income, operating_cash_flow,
+	ROUND(operating_cash_flow * 1.0 / net_income, 2) AS cash_conversion
+FROM kpi_quarterly
+ORDER BY ticker, quarter_num;
+
+--KPI snapshot
+SELECT Name, revenue, quarter, gross_margin, net_margin,
+	current_ratio, debt_to_asset
+	FROM kpi_quarterly
+	ORDER BY ticker, quarter_num;</sql><current_tab id="0"/></tab_sql></sqlb_project>
