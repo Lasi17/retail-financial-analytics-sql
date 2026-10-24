@@ -2,3 +2,6 @@
 *.db-journal
 *.db-wal
 *.db-shm
+
+*.sqbpro
+powerbi/BUILD_GUIDE.md
