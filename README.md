@@ -1,8 +1,8 @@
-# Retail Financial Performance Analytics (SQL)
+# Retail Financial Performance Analytics (SQL + Power BI)
 
 A SQL analytics project comparing the quarterly financial performance of **Nike** and **Adidas** across fiscal year 2025. Raw financial data is stored in a normalized relational database, and analytical SQL queries turn it into finance KPIs — margins, liquidity, leverage, and cash-flow quality.
 
-This project extends an earlier Excel dashboard comparing the same companies, rebuilt as a proper SQL database with version control.
+This project extends an earlier Excel dashboard comparing the same companies, rebuilt as a proper SQL database with version control, and adds an interactive **Power BI dashboard** on top of the same star schema.
 
 ## Business question
 
@@ -38,7 +38,29 @@ A view, `kpi_quarterly`, joins the tables, converts revenue to USD (`revenue_usd
 - **CTEs** (`WITH`) to structure multi-step queries
 - **Window functions**: `LAG` (quarter-over-quarter growth), `RANK` (revenue ranking), and `AVG OVER` (each quarter vs. the company's own average)
 
-## How to run
+## Power BI dashboard
+
+The same four tables are loaded into Power BI (`powerbi/nike_adidas_dashboard.pbix`) and the KPIs are rebuilt as **DAX measures**, so every number recalculates when a user filters by company or quarter.
+
+### Page 1 — Performance Overview
+KPI cards (revenue, gross margin, net margin, current ratio), revenue by quarter, net margin trend, and gross margin by company, with company and quarter slicers.
+
+![Performance Overview](powerbi/screenshots/performance_overview.png)
+
+### Page 2 — Earnings Quality
+Net income vs. operating cash flow by quarter, a cash conversion card, and a quarterly detail table (cash conversion, operating cash margin, revenue growth, debt-to-asset).
+
+![Earnings Quality](powerbi/screenshots/earnings_quality.png)
+
+### How it's built
+- **Data model:** star schema with `financials` as the fact table, related one-to-many to `companies` and `quarters`. `fx_rates` stays unrelated because its key has two columns; a `LOOKUPVALUE` calculated column converts Adidas revenue to USD instead.
+- **DAX measures:** margins and cash conversion use `DIVIDE` on totals, so they stay correct at any filter level. Current ratio and debt-to-asset use `CALCULATE` to read only the latest quarter in view, because balance-sheet figures are snapshots and shouldn't be added across quarters. Quarter-over-quarter growth uses `REMOVEFILTERS` to compare against the previous quarter.
+- **Validation:** dashboard values were checked against the SQL query results (e.g., Nike revenue $46.3B, Nike Q1 current ratio 2.36, Adidas Q1 cash conversion -2.18).
+
+### How to open
+Install the free [Power BI Desktop](https://powerbi.microsoft.com/desktop/) (Windows) and open `powerbi/nike_adidas_dashboard.pbix`. The source CSVs are in `powerbi/data/`.
+
+## How to run the SQL
 
 1. Open `retail.db` in [DB Browser for SQLite](https://sqlitebrowser.org/) (or any SQLite tool).
 2. In the **Execute SQL** tab, run the scripts in the `/sql` folder in order:
