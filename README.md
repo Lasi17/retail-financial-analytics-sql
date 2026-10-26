@@ -1,12 +1,24 @@
-# Retail Financial Performance Analytics (SQL + Power BI)
+# Retail Financial Performance Analytics (Excel + SQL + Power BI)
 
 A SQL analytics project comparing the quarterly financial performance of **Nike** and **Adidas** across fiscal year 2025. Raw financial data is stored in a normalized relational database, and analytical SQL queries turn it into finance KPIs — margins, liquidity, leverage, and cash-flow quality.
 
-This project extends an earlier Excel dashboard comparing the same companies, rebuilt as a proper SQL database with version control, and adds an interactive **Power BI dashboard** on top of the same star schema.
+This project extends an earlier Excel dashboard comparing the same companies (`Nike_vs_Adidas_Retail_Financial_Performance_Dashboard.xlsx`), rebuilt as a proper SQL database with version control, and adds an interactive **Power BI dashboard** on top of the same star schema.
 
 ## Business question
 
 How do Nike and Adidas compare across fiscal year 2025 on profitability, liquidity, leverage, and the quality of their earnings (does reported profit turn into real cash)?
+
+## Excel dashboard
+
+The Excel workbook, `Nike_vs_Adidas_Retail_Financial_Performance_Dashboard.xlsx`, is where the project started. It was built with PivotTables, PivotCharts, slicers, formulas, and financial ratios, and includes:
+
+- **Project Summary**: the goal, tools, data sources, key metrics, business insights, and how to use the dashboard
+- **Dashboard**: PivotCharts with slicers to compare the two companies
+- **Clean_Financials**: the cleaned quarterly financial data
+- **KPI**: the calculated financial ratios
+- Trend sheets for revenue, gross margin, operating margin, net profit margin, operating cash flow, and financial health
+
+GitHub can't preview Excel files, so download the workbook and open it in Excel to use the slicers.
 
 ## Database design
 
