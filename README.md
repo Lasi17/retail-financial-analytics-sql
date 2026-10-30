@@ -55,7 +55,7 @@ A view, `kpi_quarterly`, joins the tables, converts revenue to USD (`revenue_usd
 The same four tables are loaded into Power BI (`powerbi/nike_adidas_dashboard.pbix`) and the KPIs are rebuilt as **DAX measures**, so every number recalculates when a user filters by company or quarter.
 
 ### Page 1 — Performance Overview
-KPI cards (revenue, gross margin, net margin, current ratio), revenue by quarter, net margin trend, and gross margin by company, with company and quarter slicers.
+KPI cards (revenue in $B, gross margin, net margin, current ratio) showing combined totals for both companies until a company is selected, revenue by quarter, net margin trend, and gross margin by company, with company and quarter slicers.
 
 ![Performance Overview](powerbi/screenshots/performance_overview.png)
 
